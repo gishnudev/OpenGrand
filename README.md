@@ -54,4 +54,4 @@ npm run dev
 
 ```
 ## YouTube video link :
-Link: https://youtu.be/afc7eoQ9V6k
+Link: [https://youtu.be/afc7eoQ9V6k](https://youtu.be/afc7eoQ9V6k?si=fBJ_0k3yYoqezblB)
