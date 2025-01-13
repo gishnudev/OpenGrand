@@ -31,5 +31,5 @@ OpenGrant is a decentralized application (dApp) built on Ethereum for managing s
 Clone the project using Git:
 
 ```bash
-git clone https://github.com/yourusername/OpenGrant
+git clone https://github.com/gishnudev/OpenGrand
 cd OpenGrant
