@@ -33,3 +33,23 @@ Clone the project using Git:
 ```bash
 git clone https://github.com/gishnudev/OpenGrand
 cd OpenGrant
+```
+### 2. Install Dependencies
+Install the required dependencies using npm:
+```bash
+npm install
+```
+### 3. Set Up Environment Variables
+Create a .env file in the root directory and specify the following:
+```bash
+REACT_APP_CONTRACT_ADDRESS =your_contract_address
+REACT_APP_CONTRACT_ABI_PATH =path_to_your_ABI
+
+```
+Make sure to replace the placeholders with your actual contract address and ABI path.
+### 4. Run the Application
+Start the application by running:
+```bash
+npm run dev
+
+```
