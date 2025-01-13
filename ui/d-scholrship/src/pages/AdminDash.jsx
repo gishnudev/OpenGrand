@@ -8,8 +8,7 @@ const CONTRACT_ADDRESS = address['GrantModule#OpenGrant']; // Replace with your 
 function AdminPanel() {
   const [applicants, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(false);  // State to track approval process
-  const [rejecting, setRejecting] = useState(false);  // State to track rejection process
+  const [approvingIndex, setApprovingIndex] = useState(null); // Track which index is being approved
 
   // Fetch applications from smart contract
   useEffect(() => {
@@ -21,27 +20,24 @@ function AdminPanel() {
       try {
         const apps = await contract.viewAllApplications();
 
-        // Log the fetched data to check its structure
-        console.log('Fetched Applications:', apps);
-
-        // If apps is an array of tuples, map each tuple into an object
         if (Array.isArray(apps)) {
-          // Fetching applicant address along with other details
-          const applicantDetails = await Promise.all(apps.map(async (app, index) => {
-            const applicantAddress = await contract.applicants(index); // Fetch applicant's address from the contract
-            return {
-              applicantAddress,  // Add applicant address here
-              studentName: app[0], // string
-              studentAge: app[1].toString(), // uint256 (converted to string)
-              studentQualification: app[2], // string
-              studentPassYear: app[3].toString(), // uint256 (converted to string)
-              grade: app[4], // string
-              percentage: app[5].toString(), // uint256 (converted to string)
-              isSubmitted: app[6], // bool
-              isApproved: app[7], // bool
-              documentImageURL: app[8], // string
-            };
-          }));
+          const applicantDetails = await Promise.all(
+            apps.map(async (app, index) => {
+              const applicantAddress = await contract.applicants(index);
+              return {
+                applicantAddress,
+                studentName: app[0],
+                studentAge: app[1].toString(),
+                studentQualification: app[2],
+                studentPassYear: app[3].toString(),
+                grade: app[4],
+                percentage: app[5].toString(),
+                isSubmitted: app[6],
+                isApproved: app[7],
+                documentImageURL: app[8],
+              };
+            })
+          );
 
           setApplications(applicantDetails);
         } else {
@@ -59,27 +55,22 @@ function AdminPanel() {
 
   const approveApplication = async (index) => {
     if (!window.ethereum) return alert('Please install MetaMask!');
-    
+
     try {
-      // Request access to the user's Ethereum account
       await window.ethereum.request({ method: 'eth_requestAccounts' });
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, OpenGrant.abi, signer);
-    
-      // Get applicant address from applicants array
+
       const applicantAddress = applicants[index].applicantAddress;
-      console.log('Applicant Address:', applicantAddress);
 
-      // Set approving state to true to disable the button
-      setApproving(true);
+      // Track which index is being approved
+      setApprovingIndex(index);
 
-      // Call the approveApplication function in the contract
       const tx = await contract.approveApplication(applicantAddress);
-      await tx.wait();  // Wait for the transaction to be mined
+      await tx.wait();
 
-      // Update the UI with the new approval status
       const updatedApplications = applicants.map((app, idx) =>
         idx === index ? { ...app, isApproved: true } : app
       );
@@ -90,12 +81,10 @@ function AdminPanel() {
       console.error('Approval failed:', error);
       alert('Approval failed');
     } finally {
-      // Set approving state back to false after the transaction
-      setApproving(false);
+      // Reset approving index
+      setApprovingIndex(null);
     }
   };
-
- 
 
   return (
     <div className="container mx-auto p-8 bg-black text-white min-h-screen">
@@ -114,13 +103,18 @@ function AdminPanel() {
               <p>Percentage: {app.percentage}%</p>
               <p>Approved: {app.isApproved ? 'Yes' : 'No'}</p>
               <p>Submitted: {app.isSubmitted ? 'Yes' : 'No'}</p>
-              <p>Document URL: <a href={app.documentImageURL} target="_blank" rel="noopener noreferrer">View Document</a></p>
+              <p>
+                Document URL:{' '}
+                <a href={app.documentImageURL} target="_blank" rel="noopener noreferrer">
+                  View Document
+                </a>
+              </p>
               <button
                 onClick={() => approveApplication(index)}
                 className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                disabled={app.isApproved || approving}  // Disable if already approved or in the middle of approval process
+                disabled={app.isApproved || approvingIndex === index} // Disable only the button for the application being processed
               >
-                {approving ? 'Varifying...' : 'Varify'}
+                {approvingIndex === index ? 'Verifying...' : 'Verify'}
               </button>
             </div>
           ))}
